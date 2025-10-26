@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = env("DATABASE_PROVIDER") // optional
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  timezone  String   @default("Europe/Madrid")
+  createdAt DateTime @default(now())
+  members   Person[]
+  shifts    Shift[]
+}
+
+model Person {
+  id           String   @id @default(cuid())
+  displayName  String
+  email        String   @unique
+  role         String
+  certifications String
+  weeklyHoursCap Int     @default(48)
+  teamId       String
+  team         Team     @relation(fields: [teamId], references: [id])
+  events       Event[]
+  availability Availability[]
+  sickReports  SickReport[]
+}
+
+model Shift {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  start     DateTime
+  end       DateTime
+  role      String
+  required  Int      @default(1)
+  assignees Event[]
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  personId  String
+  person    Person   @relation(fields: [personId], references: [id])
+  shiftId   String
+  shift     Shift    @relation(fields: [shiftId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Availability {
+  id        String   @id @default(cuid())
+  personId  String
+  person    Person   @relation(fields: [personId], references: [id])
+  start     DateTime
+  end       DateTime
+  type      String
+}
+
+model SickReport {
+  id        String   @id @default(cuid())
+  personId  String
+  person    Person   @relation(fields: [personId], references: [id])
+  start     DateTime
+  end       DateTime
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model Audit {
+  id        String   @id @default(cuid())
+  teamId    String
+  message   String
+  createdAt DateTime @default(now())
+}
